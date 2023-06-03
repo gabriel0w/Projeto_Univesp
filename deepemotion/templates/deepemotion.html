@@ -1,0 +1,67 @@
+{% load static %}
+
+<!doctype html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background: linear-gradient(to right, #800020, #501b30);
+            font-family: 'Poppins', sans-serif;
+            color: white;
+        }
+        .menu-container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px #000;
+            margin-top: 100px;
+        }
+        .btn-primary {
+            background-color: #800020;
+            border: none;
+            box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+            transition: 0.3s;
+            border-radius: 5px;
+        }
+        .logo-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .logo-container a {
+            color: white;
+            text-decoration: none;
+        }
+        /* Custom CSS for logo size */
+        .logo-container img {
+            max-width: 600px;
+            height: auto;
+        }
+    </style>
+    <title>Deep Emotion</title>
+</head>
+<body>
+    <div class="logo-container text-center">
+        <a href="{% url 'deep_emotion' %}">
+            <img src="{% static 'default-monochrome-white.svg' %}" alt="Logo">
+        </a>
+    </div>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="menu-container text-center">
+                <h2 class="mb-4">Deep Emotion</h2>
+                <a href="{% url 'upload' %}" class="btn btn-primary btn-block mb-2">Realizar Upload de uma Pessoa</a>
+                <a href="{% url 'data_visualization' %}" class="btn btn-primary btn-block">Conferir os Gráficos</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

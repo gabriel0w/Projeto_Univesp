@@ -1,0 +1,225 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background: linear-gradient(to right, #800020, #501b30);
+            font-family: 'Poppins', sans-serif;
+            color: white;
+        }
+
+        .container {
+            margin-top: 100px;
+        }
+
+        .form-container {
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px 0px #000;
+        }
+
+        .form-check-label {
+            color: white;
+        }
+
+        .form-check-label input[type="checkbox"] {
+            background-color: white;
+        }
+
+        .form-check-label input[type="date"] {
+            background-color: white;
+            color: #800020;
+        }
+
+        #myChart {
+            margin-top: 20px;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .button-container a {
+            margin: 0 5px;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .logo-container a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .logo-container img {
+            max-width: 600px;
+            height: auto;
+        }
+    </style>
+
+    <title>Data Visualization</title>
+</head>
+<body>
+    <div class="logo-container">
+        <a href="{% url 'deep_emotion' %}">
+            <img src="{% static 'default-monochrome-white.svg' %}" alt="Logo">
+        </a>
+    </div>
+
+    <div class="container">
+        <h2 class="text-center">Data Visualization</h2>
+
+        <div class="form-container">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="emotion1Checkbox" checked>
+                <label class="form-check-label" for="emotion1Checkbox">
+                    Emoção ao chegar
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="" id="emotion2Checkbox" checked>
+                <label class="form-check-label" for="emotion2Checkbox">
+                    Emoção ao sair
+                </label>
+            </div>
+            <input type="date" id="startDate">
+            <input type="date" id="endDate">
+
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        var data = JSON.parse('{{ data|escapejs }}');
+        var emotionMapping = { 'anger': 1, 'fear': 2, 'sad': 3, 'disgust': 4, 'neutral': 5, 'happy': 6, 'surprise': 7 };
+        var chart;
+
+        function convertToJsDateFormat(dateStr) {
+            var [datePart, timePart] = dateStr.split(" ");
+            var [day, month, year] = datePart.split("/");
+            return year + "-" + month + "-" + day + "T" + timePart + ":00";
+        }
+
+        function convertToDjangoDateFormat(dateStr) {
+            var [datePart, timePart] = dateStr.split("T");
+            var [year, month, day] = datePart.split("-");
+            return day + "/" + month + "/" + year + " " + timePart.split(":").slice(0, 2).join(":");
+        }
+
+        function prepareChartData(data, startDate, endDate) {
+            var labels = [];
+            var datasetEmotion1 = { label: 'Emoção ao chegar', data: [], fill: false, borderColor: 'rgba(75, 192, 192, 1)', pointRadius: 5};
+            var datasetEmotion2 = { label: 'Emoção ao sair', data: [], fill: false, borderColor: 'rgba(255, 99, 132, 1)', pointRadius: 5};
+
+            for (var date in data) {
+                var entry = data[date];
+                var dateObj = new Date(convertToJsDateFormat(date));
+                if (dateObj < startDate || dateObj > endDate) {
+                    continue;
+                }
+                for (var i=0; i<entry.name.length; i++) {
+                    labels.push(date + ' - ' + entry.name[i]);
+                    if ($("#emotion1Checkbox").is(':checked')) {
+                        datasetEmotion1.data.push(emotionMapping[entry.emotion1[i]]);
+                    }
+                    if ($("#emotion2Checkbox").is(':checked')) {
+                        datasetEmotion2.data.push(emotionMapping[entry.emotion2[i]]);
+                    }
+                }
+            }
+
+            return { labels: labels, datasets: [datasetEmotion1, datasetEmotion2] };
+        }
+
+        function createChart(chartData) {
+            if (chart) {
+                chart.data = chartData;
+                chart.update();
+            } else {
+                chart = new Chart(document.getElementById("myChart"), {
+                    type: 'line',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        title: {
+                            display: true,
+                            text: 'Emotions Over Time'
+                        },
+                        tooltips: {
+                            mode: 'index',
+                            intersect: false,
+                        },
+                        hover: {
+                            mode: 'nearest',
+                            intersect: true
+                        },
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Date Time'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Emotion Quality'
+                                },
+                                ticks: {
+                                    beginAtZero: true,
+                                    steps: 10,
+                                    stepValue: 1,
+                                    max: 7
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        $(document).ready(function() {
+            var today = new Date();
+            var oneMonthAgo = new Date();
+            oneMonthAgo.setMonth(today.getMonth() - 1);
+            $("#startDate").val(oneMonthAgo.toISOString().split("T")[0]);
+            $("#endDate").val(today.toISOString().split("T")[0]);
+            createChart(prepareChartData(data, oneMonthAgo, today));
+
+            $("#emotion1Checkbox, #emotion2Checkbox, #startDate, #endDate").change(function() {
+                var startDate = new Date($("#startDate").val());
+                var endDate = new Date($("#endDate").val());
+                endDate.setDate(endDate.getDate() + 1);
+                createChart(prepareChartData(data, startDate, endDate));
+            });
+        });
+    </script>
+
+</body>
+</html>
